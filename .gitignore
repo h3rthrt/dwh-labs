@@ -1,0 +1,8 @@
+.DS_Store
+.env
+.idea
+*.typ
+*.pdf
+img
+img/**/*
+labs

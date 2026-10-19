@@ -1,0 +1,34 @@
+# Лабораторная работа № 4. Neo4j
+# Запуск:          docker compose up -d
+# Neo4j Browser:   http://localhost:7474  (логин neo4j, пароль student123)
+#                  нужен для визуализации графа — WebStorm граф не отрисовывает
+# Загрузка графа:  docker compose exec neo4j cypher-shell -u neo4j -p student123 -f /cypher/02_social_graph.cypher
+# Остановка:       docker compose down      (docker compose down -v — удалить данные)
+
+services:
+  neo4j:
+    image: neo4j:5.26-community
+    container_name: dwh-neo4j
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: neo4j/student123
+      # Ограничение памяти, чтобы контейнер не занимал всю ОЗУ ноутбука
+      NEO4J_server_memory_heap_initial__size: 512m
+      NEO4J_server_memory_heap_max__size: 1G
+      NEO4J_server_memory_pagecache_size: 512m
+    ports:
+      - "127.0.0.1:7474:7474"   # HTTP — Neo4j Browser
+      - "127.0.0.1:7687:7687"   # Bolt — драйверы и cypher-shell
+    volumes:
+      - neo4j-data:/data
+      - neo4j-logs:/logs
+      - ./cypher:/cypher:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:7474 >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  neo4j-data:
+  neo4j-logs:

@@ -1,0 +1,38 @@
+# Лабораторная работа № 1. PostgreSQL
+# Клиент: WebStorm → Database → + → Data Source → PostgreSQL
+#         (localhost:5432, БД service_bureau, student / student)
+# Запуск:     docker compose up -d
+# Остановка:  docker compose down        (данные сохраняются в томе)
+# Сброс БД:   docker compose down -v     (том удаляется, при следующем
+#                                         запуске скрипты из ./sql выполнятся заново)
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dwh-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: service_bureau
+      POSTGRES_USER: student
+      POSTGRES_PASSWORD: student
+      TZ: Europe/Moscow
+      PGTZ: Europe/Moscow
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      # Скрипты выполняются один раз при первой инициализации тома
+      # в алфавитном порядке: схема -> тестовые данные.
+      - ./sql/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./sql/02_data.sql:/docker-entrypoint-initdb.d/02_data.sql:ro
+      # Запросы монтируются отдельно и запускаются вручную:
+      # docker compose exec postgres psql -U student -d service_bureau -f /sql/03_queries.sql
+      - ./sql:/sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U student -d service_bureau"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pg-data:

@@ -1,0 +1,29 @@
+# Лабораторная работа № 3. MongoDB
+# Запуск сервера:      docker compose up -d
+# Клиент WebStorm:     Database → + → Data Source → MongoDB (localhost:27017, No auth)
+# Подключение клиента: docker compose exec mongo mongosh
+# Запуск скрипта:      docker compose exec mongo mongosh --file /scripts/01_basics.js
+# Остановка:           docker compose down      (docker compose down -v — удалить данные)
+#
+# Аутентификация отключена, как при локальной установке из лабораторной работы,
+# поэтому порты открыты только для localhost.
+
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: dwh-mongo
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      # Аналог каталога C:/Data/DB из методических указаний
+      - mongo-data:/data/db
+      - ./scripts:/scripts:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mongo-data:
